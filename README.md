@@ -1,5 +1,5 @@
 # kazuyomi
-A utility library to get the Japanese reading of numbers.
+A utility library to get Japanese readings of numbers.
 
 数字の読み仮名を取得するユーティリティ
 
