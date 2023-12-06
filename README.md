@@ -26,3 +26,7 @@ func main() {
     fmt.Println(kazuyomi.ReadFloat64(0.1))  // "レイテンイチ"
 }
 ```
+
+## License
+
+MIT
