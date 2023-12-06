@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	// ErrNotNumericString is returned when input is not a numeric string.
 	ErrNotNumericString = errors.New("input string is not numeric")
 )
 
@@ -179,6 +180,20 @@ func numericStrReading(numStr string) string {
 	return res
 }
 
+// ReadString returns the Japanese reading (読み仮名) of the given numeric string.
+// The result is given as a string of katakanas (カタカナ).
+//
+// If the given string is not a numeric string, ErrNotNumericString will be returned.
+// "Numeric string" is defined by the following regexp:
+//
+//	^(-|\+)?[0-9,_.]+$
+//
+// As shown above, the input string can contain "," and "_" as separators, and they will be ignored.
+//
+// If the input numeric string satisfies the conditions below, the result will be the enumeration of the "literal" reading of each digit:
+//   - has multiple dots (e.g. "1.2.3")
+//   - has more than 20 digits (N <= 10^20(1垓))
+//   - its integer part starts with "0", except it is exactly single digit "0"
 func ReadString(s string) (string, error) {
 	if !regexpNumeric.MatchString(s) {
 		return "", ErrNotNumericString
@@ -192,16 +207,22 @@ func ReadString(s string) (string, error) {
 	return numericStrReading(cleanNumericStr(s)), nil
 }
 
+// ReadInt returns the Japanese reading (読み仮名) of the given signed integer.
+// The result is given as a string of katakanas (カタカナ).
 func ReadInt(i int) string {
 	res, _ := ReadString(strconv.FormatInt(int64(i), 10))
 	return res
 }
 
+// ReadUint returns the Japanese reading (読み仮名) of the given unsigned integer.
+// The result is given as a string of katakanas (カタカナ).
 func ReadUint(i uint) string {
 	res, _ := ReadString(strconv.FormatUint(uint64(i), 10))
 	return res
 }
 
+// ReadFloat32 returns the Japanese reading (読み仮名) of the given 64-bits floating point number.
+// The result is given as a string of katakanas (カタカナ).
 func ReadFloat64(f float64) string {
 	res, _ := ReadString(strconv.FormatFloat(f, 'f', -1, 64))
 	return res
