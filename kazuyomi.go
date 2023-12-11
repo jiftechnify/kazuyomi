@@ -192,7 +192,7 @@ func numericStrReading(numStr string) string {
 //
 // If the input numeric string satisfies the conditions below, the result will be the enumeration of the "literal" reading of each digit:
 //   - has multiple dots (e.g. "1.2.3")
-//   - has more than 20 digits (N <= 10^20(1垓))
+//   - its integer part has more than 20 digits (N >= 10^20(1垓))
 //   - its integer part starts with "0", except it is exactly single digit "0"
 func ReadString(s string) (string, error) {
 	if !regexpNumeric.MatchString(s) {
@@ -221,7 +221,7 @@ func ReadUint(i uint) string {
 	return res
 }
 
-// ReadFloat32 returns the Japanese reading (読み仮名) of the given 64-bits floating point number.
+// ReadFloat64 returns the Japanese reading (読み仮名) of the given 64-bits floating point number.
 // The result is given as a string of katakanas (カタカナ).
 func ReadFloat64(f float64) string {
 	res, _ := ReadString(strconv.FormatFloat(f, 'f', -1, 64))
