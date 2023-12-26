@@ -56,36 +56,34 @@ var specialDigitReadings = map[digitWithIdx]string{
 	{digit: '8', idx: hundreds}:  "ハッピャク",
 }
 
-func literalReadling(strNum string) string {
-	res := ""
+func appendLiteralReading(sb *strings.Builder, strNum string) {
 	for _, r := range strNum {
-		res += basicDigitReadings[r]
+		sb.WriteString(basicDigitReadings[r])
 	}
-	return res
 }
 
 func smallIntReading(runes []rune) string {
-	res := ""
+	var sb strings.Builder
 	bias := 4 - len(runes)
 	for i, r := range runes {
 		if r == '0' {
 			continue
 		}
 		if read, ok := specialDigitReadings[digitWithIdx{digit: r, idx: smallNumDigitIdx(i + bias)}]; ok {
-			res += read
+			sb.WriteString(read)
 			continue
 		}
-		res += basicDigitReadings[r]
+		sb.WriteString(basicDigitReadings[r])
 		switch i + bias {
 		case 0:
-			res += "セン"
+			sb.WriteString("セン")
 		case 1:
-			res += "ヒャク"
+			sb.WriteString("ヒャク")
 		case 2:
-			res += "ジュウ"
+			sb.WriteString("ジュウ")
 		}
 	}
-	return res
+	return sb.String()
 }
 
 // nasal sound change = 促音便
@@ -110,7 +108,7 @@ func intPartReading(strInt string) string {
 		return "ゼロ"
 	}
 
-	res := ""
+	var sb strings.Builder
 	runes := []rune(strInt)
 	for i := 5; i >= 1; i-- {
 		if len(runes) <= 4*(i-1) {
@@ -122,22 +120,22 @@ func intPartReading(strInt string) string {
 		}
 		switch i {
 		case 5:
-			res += applyNasalSoundChange(smallRead)
-			res += "ケイ"
+			sb.WriteString(applyNasalSoundChange(smallRead))
+			sb.WriteString("ケイ")
 		case 4:
-			res += applyNasalSoundChange(smallRead)
-			res += "チョウ"
+			sb.WriteString(applyNasalSoundChange(smallRead))
+			sb.WriteString("チョウ")
 		case 3:
-			res += smallRead
-			res += "オク"
+			sb.WriteString(smallRead)
+			sb.WriteString("オク")
 		case 2:
-			res += smallRead
-			res += "マン"
+			sb.WriteString(smallRead)
+			sb.WriteString("マン")
 		case 1:
-			res += smallRead
+			sb.WriteString(smallRead)
 		}
 	}
-	return res
+	return sb.String()
 }
 
 func consumePrefixedSign(s string) (string, string) {
@@ -151,33 +149,39 @@ func consumePrefixedSign(s string) (string, string) {
 }
 
 func numericStrReading(numStr string) string {
-	res := ""
+	var sb strings.Builder
 
 	// read prefixed sign
 	s, signRead := consumePrefixedSign(numStr)
-	res += signRead
+	sb.WriteString(signRead)
 
 	parts := strings.Split(s, ".")
 
 	intPart := parts[0]
 	if len(intPart) >= 2 && intPart[0] == '0' || len(intPart) > 20 {
-		res += literalReadling(s)
-		return res
+		appendLiteralReading(&sb, s)
+		return sb.String()
 	}
+
 	// read integer part
-	res += intPartReading(intPart)
+	ipr := intPartReading(intPart)
+
+	// input is integer or decimal part is empty
+	if len(parts) == 1 || parts[1] == "" {
+		sb.WriteString(ipr)
+		return sb.String()
+	}
 
 	// read decimal part
-	// if decimal part is empty (e.g. input is like "1."), don't read "."
 	if len(parts) == 2 && parts[1] != "" {
-		if res == "ゼロ" {
-			res = "レイ"
+		if ipr == "ゼロ" {
+			ipr = "レイ"
 		}
-		res = applyNasalSoundChange(res)
-		res += "テン"
-		res += literalReadling(parts[1])
+		sb.WriteString(applyNasalSoundChange(ipr))
+		sb.WriteString("テン")
+		appendLiteralReading(&sb, parts[1])
 	}
-	return res
+	return sb.String()
 }
 
 // ReadString returns the Japanese reading (読み仮名) of the given numeric string.
@@ -201,7 +205,9 @@ func ReadString(s string) (string, error) {
 
 	dots := strings.Count(s, ".")
 	if dots >= 2 {
-		return literalReadling(s), nil
+		var sb strings.Builder
+		appendLiteralReading(&sb, s)
+		return sb.String(), nil
 	}
 
 	return numericStrReading(cleanNumericStr(s)), nil
